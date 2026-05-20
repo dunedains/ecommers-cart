@@ -16,7 +16,7 @@ Microservicio de carrito de compras. Permite agregar, actualizar y eliminar prod
 |--------|------|-------------|
 | `GET` | `/api/cart/user/{userId}` | Ver carrito de un usuario |
 | `POST` | `/api/cart` | Agregar producto al carrito |
-| `PUT` | `/api/cart/{id}` | Actualizar cantidad de un ítem |
+| `PATCH` | `/api/cart/{id}/quantity?quantity=N` | Actualizar cantidad de un ítem |
 | `DELETE` | `/api/cart/{id}` | Eliminar ítem del carrito |
 | `DELETE` | `/api/cart/user/{userId}` | Vaciar carrito completo |
 
