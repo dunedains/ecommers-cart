@@ -1,5 +1,6 @@
 package com.ecommers.cart.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import com.ecommers.cart.client.InventoryClient;
 import com.ecommers.cart.client.ProductClient;
 import com.ecommers.cart.dto.CartItemDto.*;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CartItemServiceImpl implements CartItemService {
@@ -24,10 +26,12 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     @Transactional
     public CartResponse addToCart(CartRequest request) {
+        log.info("Agregando al carrito userId={} productId={} qty={}", request.userId(), request.productId(), request.quantity());
         productClient.getProductById(request.productId());
 
         InventoryDto stock = inventoryClient.getStock(request.productId());
         if (stock.quantity() < request.quantity()) {
+            log.warn("Stock insuficiente productId={} disponible={} solicitado={}", request.productId(), stock.quantity(), request.quantity());
             throw new IllegalArgumentException("Stock insuficiente. Disponible: " + stock.quantity());
         }
 
@@ -42,12 +46,14 @@ public class CartItemServiceImpl implements CartItemService {
 
         item.setQuantity(item.getQuantity() + request.quantity());
         CartItem saved = repository.save(item);
+        log.info("Item agregado al carrito id={}", saved.getId());
         return toResponse(saved);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<CartResponse> getCartByUser(Long userId) {
+        log.info("Obteniendo carrito userId={}", userId);
         return repository.findByUserId(userId).stream()
                 .map(this::toResponse)
                 .toList();
@@ -56,6 +62,7 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     @Transactional
     public CartResponse updateQuantity(Long id, Integer quantity) {
+        log.info("Actualizando cantidad itemId={} qty={}", id, quantity);
         if (quantity <= 0) {
             throw new IllegalArgumentException("La cantidad debe ser mayor a 0");
         }
@@ -64,6 +71,7 @@ public class CartItemServiceImpl implements CartItemService {
 
         InventoryDto stock = inventoryClient.getStock(item.getProductId());
         if (stock.quantity() < quantity) {
+            log.warn("Stock insuficiente productId={} disponible={}", item.getProductId(), stock.quantity());
             throw new IllegalArgumentException("Stock insuficiente. Disponible: " + stock.quantity());
         }
 
@@ -74,6 +82,7 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     @Transactional
     public void removeFromCart(Long id) {
+        log.info("Eliminando item del carrito id={}", id);
         if (!repository.existsById(id)) {
             throw new CartItemNotFoundException(id);
         }
@@ -83,6 +92,7 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     @Transactional
     public void clearCart(Long userId) {
+        log.info("Limpiando carrito userId={}", userId);
         repository.deleteByUserId(userId);
     }
 
